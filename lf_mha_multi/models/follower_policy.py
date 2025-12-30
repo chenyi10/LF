@@ -15,6 +15,8 @@ class FollowerFeaturesExtractor(BaseFeaturesExtractor):
     Processes:
     - Local observations (position, velocity, rays)
     - Guidance vectors and weights from leader
+    
+    Note: For simplicity with SB3, we flatten multi-follower observations
     """
     
     def __init__(
@@ -38,11 +40,11 @@ class FollowerFeaturesExtractor(BaseFeaturesExtractor):
         # Get input dimension from observation space
         # Expecting Dict with 'follower_obs' key
         follower_obs_shape = observation_space['follower_obs'].shape
+        
+        # Flatten the observation (n_followers, obs_dim) -> (n_followers * obs_dim)
         if len(follower_obs_shape) == 2:
-            # Multiple followers: (n_followers, obs_dim)
-            input_dim = follower_obs_shape[1]
+            input_dim = follower_obs_shape[0] * follower_obs_shape[1]
         else:
-            # Single follower: (obs_dim,)
             input_dim = follower_obs_shape[0]
         
         # Build MLP
@@ -69,18 +71,11 @@ class FollowerFeaturesExtractor(BaseFeaturesExtractor):
         """
         follower_obs = observations['follower_obs']
         
-        # Handle both single and multiple followers
-        original_shape = follower_obs.shape
-        if len(original_shape) == 3:
-            # (batch, n_followers, obs_dim) -> process each follower
-            batch_size, n_followers, obs_dim = original_shape
-            follower_obs = follower_obs.reshape(batch_size * n_followers, obs_dim)
-            features = self.mlp(follower_obs)
-            # Reshape back
-            features = features.reshape(batch_size, n_followers, -1)
-        else:
-            # (batch, obs_dim) or (batch * n_followers, obs_dim)
-            features = self.mlp(follower_obs)
+        # Flatten observations
+        batch_size = follower_obs.shape[0]
+        follower_obs_flat = follower_obs.reshape(batch_size, -1)
+        
+        features = self.mlp(follower_obs_flat)
         
         return features
 

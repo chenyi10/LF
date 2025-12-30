@@ -139,10 +139,10 @@ class LeaderFollowerNavEnv(gym.Env):
                     shape=(self.n_agents-1, follower_obs_dim), dtype=np.float32
                 )
             })
-            # Follower actions: (n_agents-1, 2)
+            # Follower actions: flattened (n_agents-1) * 2
             self.action_space = spaces.Box(
                 low=-1, high=1,
-                shape=(self.n_agents-1, 2), dtype=np.float32
+                shape=((self.n_agents-1) * 2,), dtype=np.float32
             )
     
     def reset(self, seed: Optional[int] = None, options: Optional[Dict] = None) -> Tuple[Dict, Dict]:
@@ -345,11 +345,13 @@ class LeaderFollowerNavEnv(gym.Env):
         Followers use: a_i = a_i^RL + a_i^avoid + a_i^form
         
         Args:
-            follower_actions_rl: RL actions for followers (n_agents-1, 2)
+            follower_actions_rl: RL actions for followers - flattened (n_agents-1)*2
             
         Returns:
             Actions (n_agents, 2)
         """
+        # Reshape flattened actions to (n_agents-1, 2)
+        follower_actions_rl = follower_actions_rl.reshape(self.n_agents-1, 2)
         actions = np.zeros((self.n_agents, 2), dtype=np.float32)
         
         # Leader action (using guidance - should be from frozen policy)
