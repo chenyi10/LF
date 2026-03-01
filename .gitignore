@@ -38,7 +38,6 @@ env/
 .DS_Store
 
 # Training artifacts
-models/
 checkpoints/
 results/
 logs/
