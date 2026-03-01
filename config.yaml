@@ -1,0 +1,55 @@
+# Multi-UAV Residual Policy Control Configuration
+
+simulation:
+  n_uavs: 4               # Total number of UAVs (1 leader + 3 followers)
+  dt: 0.05                # Time step (seconds)
+  max_steps: 500          # Maximum simulation steps
+  seed: 42
+
+uav:
+  mass: 1.0               # UAV mass (kg)
+  v_max: 3.0              # Maximum velocity (m/s)
+  a_max: 5.0              # Maximum acceleration (m/s^2)
+  drag: 0.1               # Drag coefficient
+
+leader:
+  trajectory: circle      # Reference trajectory type: circle, lemniscate, straight
+  radius: 5.0             # Trajectory radius (m)
+  speed: 1.0              # Leader speed (m/s)
+  altitude: 2.0           # Constant altitude (m)
+
+formation:
+  offsets:                # Desired offsets from leader for each follower [x, y, z]
+    - [-2.0,  1.0, 0.0]
+    - [-2.0, -1.0, 0.0]
+    - [-4.0,  0.0, 0.0]
+
+base_controller:
+  k_p: 1.0                # Position proportional gain
+  k_d: 0.5                # Velocity derivative gain
+  a_max: 3.0              # Maximum acceleration command (m/s^2)
+
+residual_policy:
+  hidden_dims: [128, 128, 64]   # Hidden layer sizes
+  activation: relu              # Activation function
+  a_residual_max: 1.0           # Maximum residual acceleration (m/s^2)
+  learning_rate: 1.0e-3
+  batch_size: 64
+  gamma: 0.99                   # Discount factor
+
+training:
+  n_episodes: 1000
+  max_steps_per_episode: 500
+  eval_interval: 50             # Evaluate every N episodes
+  save_interval: 100            # Save model every N episodes
+  checkpoint_dir: checkpoints
+
+disturbance:
+  enabled: false
+  wind_magnitude: 0.2           # Max wind disturbance (m/s^2)
+  wind_direction: [1.0, 0.0, 0.0]
+
+logging:
+  log_interval: 10              # Log every N steps
+  save_trajectories: true
+  output_dir: logs
